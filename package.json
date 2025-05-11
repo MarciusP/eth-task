@@ -10,8 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.0",
+    "@types/papaparse": "^5.3.16",
+    "@types/react-plotly.js": "^2.6.3",
+    "papaparse": "^5.5.2",
+    "parquet-wasm": "^0.6.1",
+    "plotly.js": "^3.0.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-plotly.js": "^2.6.0",
+    "sass": "^1.88.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
