@@ -1,0 +1,13 @@
+# Ignore dependencies and build artifacts
+node_modules
+dist
+.env*
+.DS_Store
+
+# Ignore git history and configuration
+.git
+.gitignore
+
+# Ignore IDE/editor files
+.vscode
+.idea 
