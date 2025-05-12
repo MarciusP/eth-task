@@ -1,5 +1,6 @@
 import { createContext, useState } from "react";
 import type { ReactNode } from "react";
+import type { ElectricityAggregationLevel } from "../types/index";
 
 export type Page = "gdp" | "electricity";
 
@@ -12,6 +13,8 @@ export interface NavigationContextState {
   setElectricityAvailable: (available: boolean) => void;
   isExpertMode: boolean;
   setIsExpertMode: (isExpert: boolean) => void;
+  electricityAggregation: ElectricityAggregationLevel;
+  setElectricityAggregation: (level: ElectricityAggregationLevel) => void;
 }
 
 export const NavigationContext = createContext<
@@ -30,6 +33,8 @@ const NavigationContextProvider = (props: NavigationContextProviderProps) => {
   const [electricityAvailable, setElectricityAvailable] =
     useState<boolean>(false);
   const [isExpertMode, setIsExpertMode] = useState<boolean>(false);
+  const [electricityAggregation, setElectricityAggregation] =
+    useState<ElectricityAggregationLevel>("yearly");
 
   const value = {
     currentPage,
@@ -40,6 +45,8 @@ const NavigationContextProvider = (props: NavigationContextProviderProps) => {
     setElectricityAvailable,
     isExpertMode,
     setIsExpertMode,
+    electricityAggregation,
+    setElectricityAggregation,
   };
 
   return (

@@ -1,12 +1,10 @@
 // Placeholder for data loading and parsing logic
 import type { GDPDataPoint, GDPSchema } from "../types/gdp";
 import type {
-  GenerationDataPoint,
   GenerationSchema,
 } from "../types/generation";
 import Papa from "papaparse";
-import initParquetWasmModule, * as parquetWasm from "parquet-wasm";
-import * as arrow from "apache-arrow";
+import type { FromWorkerMessage, ParseSuccessMessage } from "../workers/workerTypes";
 
 export const loadGDPData = async (): Promise<GDPDataPoint[]> => {
   try {
@@ -48,7 +46,6 @@ export const loadGDPData = async (): Promise<GDPDataPoint[]> => {
                 row.gdp !== undefined
             );
           // Filter out any potentially incomplete rows after mapping, though skipEmptyLines helps
-          console.log("GDP data loaded and parsed:", data);
           resolve(data as GDPDataPoint[]);
         },
         error: (error: Error) => {
@@ -63,56 +60,59 @@ export const loadGDPData = async (): Promise<GDPDataPoint[]> => {
   }
 };
 
-export const loadElectricityData = async (): Promise<GenerationDataPoint[]> => {
-  let wasmArrowTable: any; // Declare here for access in catch block
+// Define a type for the resolved value of loadElectricityData
+// It will contain the worker instance and initial metadata
+export interface ElectricityDataWorkerResponse {
+  worker: Worker;
+  initialData: ParseSuccessMessage;
+}
+
+// Redefine loadElectricityData to use the Web Worker
+export const loadElectricityData = async (): Promise<ElectricityDataWorkerResponse> => {
   try {
-    console.log("Attempting to load Electricity data from /data/generation.parquet...");
-
-    await initParquetWasmModule('/parquet_wasm_bg.wasm'); 
-    console.log("parquet-wasm initialized.");
-
     const response = await fetch("/data/generation.parquet");
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const arrayBuffer = await response.arrayBuffer();
-    const parquetData = new Uint8Array(arrayBuffer);
 
-    wasmArrowTable = parquetWasm.readParquet(parquetData); // Assign here
-    console.log("Wasm Arrow Table loaded from Parquet:", wasmArrowTable);
+    // Create the worker
+    // Note: Vite requires the `new URL(...)` syntax for worker instantiation
+    const worker = new Worker(new URL('../workers/electricityWorker.ts', import.meta.url), { type: 'module' });
 
-    // Convert Wasm Arrow Table to Arrow IPC Stream
-    const ipcStream = wasmArrowTable.intoIPCStream();
-    console.log("IPC Stream created from Wasm Table");
+    // Return a Promise that resolves/rejects based on the worker's first message
+    return new Promise((resolve, reject) => {
+      worker.onmessage = (event: MessageEvent<FromWorkerMessage>) => {
+        if (event.data.type === "PARSE_SUCCESS") {
+          resolve({ worker: worker, initialData: event.data });
+        } else if (event.data.type === "PARSE_ERROR") {
+          console.error("MainThread: Worker reported parsing error:", event.data.error);
+          worker.terminate(); // Clean up the worker on error
+          reject(new Error(event.data.error));
+        } 
+        // In phase 2, we might handle other message types here or keep listening
+        // For phase 1, we only care about the first success/error message for initialization
+        // We might want to remove the listener after the first message if we only care about init result
+        // worker.onmessage = null; // Example: Stop listening after first message
+      };
 
-    // Read IPC Stream into a JavaScript Arrow Table
-    const jsArrowTable = arrow.tableFromIPC(ipcStream);
-    console.log("JavaScript Arrow Table created from IPC Stream:", jsArrowTable);
+      worker.onerror = (error) => {
+        console.error("MainThread: Worker error:", error);
+        worker.terminate(); // Clean up the worker
+        reject(new Error(`Worker error: ${error.message}`));
+      };
 
-    // Convert JavaScript Arrow Table to an array of plain JavaScript objects
-    // The .toArray() method on an Arrow JS Table typically returns an array of row objects.
-    const jsonData: any[] = jsArrowTable.toArray();
-    console.log(`Converted JS Arrow Table to JSON array. Number of rows: ${jsonData.length}`);
-
-    const typedData: GenerationDataPoint[] = jsonData.map((row: any) => ({
-      year: Number(row.year),
-      datetime: String(row.datetime),
-      country_id: row.country_id as "AT" | "DE" | "CH",
-      country_label: row.country_label as "Austria" | "Germany" | "Switzerland",
-      technology: row.technology,
-      generation: Number(row.generation),
-    }));
-
-    console.log(
-      `Electricity data processed. Total rows from JS Arrow Table: ${jsArrowTable.numRows}, First 5 typed records:`, 
-      typedData.slice(0, 5)
-    );
-    return typedData;
+      // Send the data to the worker to start parsing
+      // The path to the wasm file is relative to the public directory
+      const wasmPath = '/parquet_wasm_bg.wasm'; 
+      // Transfer the ArrayBuffer to avoid copying
+      worker.postMessage({ type: "INIT_AND_PARSE", parquetData: arrayBuffer, wasmPath }, [arrayBuffer]);
+    });
 
   } catch (error) {
-    console.error("Failed to load or parse Electricity Parquet data:", error);
-    if (wasmArrowTable) { // Check if it was assigned
-      console.error("Wasm Arrow Table object at time of error:", wasmArrowTable);
-    }
-    return [];
+    console.error("MainThread: Failed to fetch or initialize worker for Electricity Parquet data:", error);
+    // Ensure the promise rejects if the fetch fails
+    return Promise.reject(error);
   }
 };
 
@@ -123,7 +123,6 @@ export const loadGDPSchema = async (): Promise<GDPSchema | null> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const schema: GDPSchema = await response.json();
-    console.log("GDP schema loaded:", schema);
     return schema;
   } catch (error) {
     console.error("Failed to load GDP schema:", error);
@@ -139,7 +138,6 @@ export const loadElectricitySchema =
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const schema: GenerationSchema = await response.json();
-      console.log("Electricity schema loaded:", schema);
       return schema;
     } catch (error) {
       console.error("Failed to load Electricity schema:", error);

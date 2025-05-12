@@ -1,39 +1,44 @@
 import React from "react";
 import Plot from "react-plotly.js";
-import type { GDPDataPoint } from "../../types/gdp";
+import type { GDPDataPoint, GDPSchema } from "../../types/gdp";
 
 interface GDPChartProps {
   data: GDPDataPoint[];
+  schema: GDPSchema | null;
 }
 
-const GDPChart: React.FC<GDPChartProps> = ({ data }) => {
+const GDPChart: React.FC<GDPChartProps> = ({ data, schema }) => {
   if (!data || data.length === 0) {
     return <p>No GDP data available to display.</p>;
   }
 
-  const traces = [];
-  const countries = Array.from(new Set(data.map((item) => item.country_label)));
-
-  for (const country of countries) {
-    const countryData = data.filter((item) => item.country_label === country);
-    traces.push({
-      x: countryData.map((item) => item.year),
-      y: countryData.map((item) => item.gdp),
+  const traces = ["AT", "DE", "CH"].map((countryId) => {
+    const countryData = data.filter((d) => d.country_id === countryId);
+    return {
+      x: countryData.map((d) => d.year),
+      y: countryData.map((d) => d.gdp),
+      name: countryId,
       type: "bar" as const,
-      name: country,
-    });
-  }
+    };
+  });
+
+  const chartTitle = schema?.title || "Gross Domestic Product";
+  const yAxisTitle = `GDP (${schema?.valueField?.unit || 'Unknown Unit'})`;
 
   return (
     <Plot
       data={traces}
       layout={{
-        title: { text: "GDP Over Time by Country" },
-        xaxis: { title: { text: "Year" } },
-        yaxis: { title: { text: "GDP (Euros)" } },
-        barmode: "group",
+        title: { text: chartTitle },
+        xaxis: {
+          title: { text: "Year" },
+          type: "category" as const,
+        },
+        yaxis: { title: { text: yAxisTitle } },
+        barmode: "group" as const,
       }}
-      style={{ width: "100%", height: "500px" }}
+      style={{ width: "95%", height: "600px" }}
+      config={{ responsive: true }}
     />
   );
 };

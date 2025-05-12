@@ -19,12 +19,17 @@ const AppBar: React.FC<AppBarProps> = () => {
     electricityAvailable,
     isExpertMode,
     setIsExpertMode,
+    setElectricityAggregation,
   } = context;
 
   const handleExpertModeChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setIsExpertMode(event.target.checked);
+    const newExpertModeState = event.target.checked;
+    setIsExpertMode(newExpertModeState);
+    if (!newExpertModeState) {
+      setElectricityAggregation('yearly');
+    }
   };
 
   return (

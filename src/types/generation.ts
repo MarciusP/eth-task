@@ -9,12 +9,12 @@ export type Technology =
   | 'Lignite';
 
 export interface GenerationDataPoint {
-  year: number; // This might be redundant if datetime is complete
-  datetime: string; // ISO 8601 datetime string e.g. "2023-01-01T00:00:00Z" - needs confirmation from actual parquet data
+  year: number;
+  datetime: string;
   country_id: 'AT' | 'DE' | 'CH';
   country_label: 'Austria' | 'Germany' | 'Switzerland';
   technology: Technology;
-  generation: number; // in MWh
+  generation: number;
 }
 
 export interface GenerationSchema {
@@ -35,8 +35,8 @@ export interface GenerationSchema {
     locationType: 'country';
   }>;
   fields: Array<{
-    name: 'year' | 'country_id' | 'country_label' | 'technology' | 'generation' | 'datetime'; // Added datetime here
-    type: 'integer' | 'string' | 'number'; // Datetime might be string or a more specific date type post-parsing
+    name: 'year' | 'country_id' | 'country_label' | 'technology' | 'generation' | 'datetime';
+    type: 'integer' | 'string' | 'number';
     title: string;
     description: string;
     constraints: {
