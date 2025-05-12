@@ -4,7 +4,7 @@ services:
   frontend:
     container_name: eth-task-frontend
     build:
-      context: ./  # Build context is the eth-task directory
+      context: .  # Build context is the current directory (eth-task)
       dockerfile: Dockerfile # Dockerfile is located within the context
     ports:
       - "9321:80" # Map host port 9321 to container port 80 (Nginx)
