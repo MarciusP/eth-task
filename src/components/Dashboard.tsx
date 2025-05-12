@@ -2,7 +2,12 @@ import React, { useState, useEffect, useContext } from "react";
 import GDPChart from "./charts/GDPChart";
 import ElectricityChart from "./charts/ElectricityChart";
 import { NavigationContext } from "../context/NavigationContext";
-import { loadGDPData, loadGDPSchema } from "../services/dataLoader";
+import {
+  loadGDPData,
+  loadGDPSchema,
+  loadElectricityData,
+  loadElectricitySchema,
+} from "../services/dataLoader";
 import type { GDPDataPoint, GDPSchema } from "../types/gdp";
 import type {
   GenerationDataPoint,
@@ -37,18 +42,20 @@ const Dashboard: React.FC = () => {
         setGdpAvailable(false);
         setElectricityAvailable(false);
 
-        const [gdp, gdpSch] = await Promise.all([
+        const [gdp, gdpSch, electricity, electricitySch] = await Promise.all([
           loadGDPData(),
           loadGDPSchema(),
+          loadElectricityData(),
+          loadElectricitySchema(),
         ]);
 
         setGdpData(gdp);
         if (gdpSch) setGdpSchema(gdpSch as GDPSchema);
-        setGdpAvailable(gdp.length > 0 || !!gdpSch);
+        setGdpAvailable(gdp.length > 0 && !!gdpSch);
 
-        setElectricityData([]);
-        setElectricitySchema(null);
-        setElectricityAvailable(false);
+        setElectricityData(electricity);
+        if (electricitySch) setElectricitySchema(electricitySch as GenerationSchema);
+        setElectricityAvailable(!!electricitySch);
       } catch (err) {
         console.error("Failed to load data:", err);
         setError(
@@ -69,14 +76,22 @@ const Dashboard: React.FC = () => {
 
       {!loading && !error && (
         <div className="charts-container">
-          {currentPage === "gdp" && gdpSchema && (
+          {currentPage === "gdp" && (
             <div>
-              <GDPChart data={gdpData} />
+              {gdpData.length > 0 && gdpSchema ? (
+                <GDPChart data={gdpData} />
+              ) : (
+                <p>GDP data is currently unavailable or still loading.</p>
+              )}
             </div>
           )}
-          {currentPage === "electricity" && electricitySchema && (
+          {currentPage === "electricity" && (
             <div>
-              <ElectricityChart data={electricityData} />
+              {electricitySchema ? (
+                <ElectricityChart data={electricityData} />
+              ) : (
+                <p>Electricity data is currently unavailable or still loading.</p>
+              )}
             </div>
           )}
         </div>

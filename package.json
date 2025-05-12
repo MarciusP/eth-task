@@ -15,6 +15,7 @@
     "@mui/material": "^7.1.0",
     "@types/papaparse": "^5.3.16",
     "@types/react-plotly.js": "^2.6.3",
+    "apache-arrow": "^19.0.1",
     "papaparse": "^5.5.2",
     "parquet-wasm": "^0.6.1",
     "plotly.js": "^3.0.1",

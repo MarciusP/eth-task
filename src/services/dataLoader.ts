@@ -5,6 +5,8 @@ import type {
   GenerationSchema,
 } from "../types/generation";
 import Papa from "papaparse";
+import initParquetWasmModule, * as parquetWasm from "parquet-wasm";
+import * as arrow from "apache-arrow";
 
 export const loadGDPData = async (): Promise<GDPDataPoint[]> => {
   try {
@@ -62,11 +64,56 @@ export const loadGDPData = async (): Promise<GDPDataPoint[]> => {
 };
 
 export const loadElectricityData = async (): Promise<GenerationDataPoint[]> => {
-  // TODO: Implement Electricity data loading from Parquet (task/data/generation.parquet)
-  // TODO: Fetch and use schema from task/schemas/generation.json
-  console.log("Loading Electricity data...");
-  // parquet-wasm will be used here
-  return [];
+  let wasmArrowTable: any; // Declare here for access in catch block
+  try {
+    console.log("Attempting to load Electricity data from /data/generation.parquet...");
+
+    await initParquetWasmModule('/parquet_wasm_bg.wasm'); 
+    console.log("parquet-wasm initialized.");
+
+    const response = await fetch("/data/generation.parquet");
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const parquetData = new Uint8Array(arrayBuffer);
+
+    wasmArrowTable = parquetWasm.readParquet(parquetData); // Assign here
+    console.log("Wasm Arrow Table loaded from Parquet:", wasmArrowTable);
+
+    // Convert Wasm Arrow Table to Arrow IPC Stream
+    const ipcStream = wasmArrowTable.intoIPCStream();
+    console.log("IPC Stream created from Wasm Table");
+
+    // Read IPC Stream into a JavaScript Arrow Table
+    const jsArrowTable = arrow.tableFromIPC(ipcStream);
+    console.log("JavaScript Arrow Table created from IPC Stream:", jsArrowTable);
+
+    // Convert JavaScript Arrow Table to an array of plain JavaScript objects
+    // The .toArray() method on an Arrow JS Table typically returns an array of row objects.
+    const jsonData: any[] = jsArrowTable.toArray();
+    console.log(`Converted JS Arrow Table to JSON array. Number of rows: ${jsonData.length}`);
+
+    const typedData: GenerationDataPoint[] = jsonData.map((row: any) => ({
+      year: Number(row.year),
+      datetime: String(row.datetime),
+      country_id: row.country_id as "AT" | "DE" | "CH",
+      country_label: row.country_label as "Austria" | "Germany" | "Switzerland",
+      technology: row.technology,
+      generation: Number(row.generation),
+    }));
+
+    console.log(
+      `Electricity data processed. Total rows from JS Arrow Table: ${jsArrowTable.numRows}, First 5 typed records:`, 
+      typedData.slice(0, 5)
+    );
+    return typedData;
+
+  } catch (error) {
+    console.error("Failed to load or parse Electricity Parquet data:", error);
+    if (wasmArrowTable) { // Check if it was assigned
+      console.error("Wasm Arrow Table object at time of error:", wasmArrowTable);
+    }
+    return [];
+  }
 };
 
 export const loadGDPSchema = async (): Promise<GDPSchema | null> => {
@@ -86,7 +133,16 @@ export const loadGDPSchema = async (): Promise<GDPSchema | null> => {
 
 export const loadElectricitySchema =
   async (): Promise<GenerationSchema | null> => {
-    // Placeholder - will be implemented later
-    console.log("Loading Electricity schema... (placeholder)");
-    return null;
+    try {
+      const response = await fetch("/schemas/generation.json");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const schema: GenerationSchema = await response.json();
+      console.log("Electricity schema loaded:", schema);
+      return schema;
+    } catch (error) {
+      console.error("Failed to load Electricity schema:", error);
+      return null;
+    }
   };
