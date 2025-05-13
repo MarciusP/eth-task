@@ -28,7 +28,7 @@ const AppBar: React.FC<AppBarProps> = () => {
     const newExpertModeState = event.target.checked;
     setIsExpertMode(newExpertModeState);
     if (!newExpertModeState) {
-      setElectricityAggregation('yearly');
+      setElectricityAggregation("yearly");
     }
   };
 

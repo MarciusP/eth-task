@@ -39,19 +39,19 @@ export interface AggregationErrorMessage {
   error: string;
 }
 
-export type FromWorkerMessage = 
-    ParseSuccessMessage | 
-    ParseErrorMessage | 
-    AggregationResultMessage |
-    AggregationErrorMessage;
+export type FromWorkerMessage =
+  | ParseSuccessMessage
+  | ParseErrorMessage
+  | AggregationResultMessage
+  | AggregationErrorMessage;
 
 // Data structure for aggregation requests (will be used in Phase 2)
 export interface AggregationRequest {
-  aggregationLevel: 'yearly' | 'monthly' | 'daily';
+  aggregationLevel: "yearly" | "monthly" | "daily";
   selectedCountries: string[];
   // dateRange: { startDate: string | null; endDate: string | null }; // Add in Phase 3
 }
 
 // Data structure for aggregated results (will be used in Phase 2)
 // Using PlotData from plotly.js for the traces
-export type AggregatedPlotData = Partial<PlotData>[]; 
+export type AggregatedPlotData = Partial<PlotData>[];

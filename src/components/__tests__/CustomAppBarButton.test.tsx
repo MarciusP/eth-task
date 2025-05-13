@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import CustomAppBarButton from '../ui/CustomAppBarButton';
+import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import CustomAppBarButton from "../ui/CustomAppBarButton";
 
-it('renders CustomAppBarButton with correct text', () => {
-  const buttonText = 'Test Button';
+it("renders CustomAppBarButton with correct text", () => {
+  const buttonText = "Test Button";
   const handleClick = jest.fn();
   render(
     <CustomAppBarButton
@@ -14,15 +14,15 @@ it('renders CustomAppBarButton with correct text', () => {
     />
   );
 
-  const buttonElement = screen.getByRole('button', { name: buttonText });
+  const buttonElement = screen.getByRole("button", { name: buttonText });
   expect(buttonElement).toBeInTheDocument();
   expect(buttonElement).toHaveTextContent(buttonText);
-  expect(buttonElement).not.toHaveClass('selected');
-  expect(buttonElement).not.toHaveClass('disabled');
+  expect(buttonElement).not.toHaveClass("selected");
+  expect(buttonElement).not.toHaveClass("disabled");
 });
 
-it('renders CustomAppBarButton with selected styles when selected is true', () => {
-  const buttonText = 'Selected Button';
+it("renders CustomAppBarButton with selected styles when selected is true", () => {
+  const buttonText = "Selected Button";
   const handleClick = jest.fn();
   render(
     <CustomAppBarButton
@@ -33,14 +33,14 @@ it('renders CustomAppBarButton with selected styles when selected is true', () =
     />
   );
 
-  const buttonElement = screen.getByRole('button', { name: buttonText });
+  const buttonElement = screen.getByRole("button", { name: buttonText });
   expect(buttonElement).toBeInTheDocument();
-  expect(buttonElement).toHaveClass('selected');
-  expect(buttonElement).not.toHaveClass('disabled');
+  expect(buttonElement).toHaveClass("selected");
+  expect(buttonElement).not.toHaveClass("disabled");
 });
 
-it('renders CustomAppBarButton with disabled styles when disabled is true', () => {
-  const buttonText = 'Disabled Button';
+it("renders CustomAppBarButton with disabled styles when disabled is true", () => {
+  const buttonText = "Disabled Button";
   const handleClick = jest.fn();
   render(
     <CustomAppBarButton
@@ -51,9 +51,9 @@ it('renders CustomAppBarButton with disabled styles when disabled is true', () =
     />
   );
 
-  const buttonElement = screen.getByRole('button', { name: buttonText });
+  const buttonElement = screen.getByRole("button", { name: buttonText });
   expect(buttonElement).toBeInTheDocument();
-  expect(buttonElement).toHaveClass('disabled');
-  expect(buttonElement).not.toHaveClass('selected');
+  expect(buttonElement).toHaveClass("disabled");
+  expect(buttonElement).not.toHaveClass("selected");
   expect(buttonElement).toBeDisabled();
-}); 
+});

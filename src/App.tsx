@@ -1,4 +1,4 @@
-import './App.scss';
+import "./App.scss";
 import NavigationContextProvider from "./context/NavigationContext";
 import Dashboard from "./components/Dashboard";
 import AppBar from "./components/ui/AppBar";
