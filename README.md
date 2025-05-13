@@ -150,3 +150,19 @@ npm test
 ```
 
 ---
+
+## Approach and Design Decisions
+
+This section outlines some of the key approaches and decisions made during the development of this project:
+
+*   **Data Loading:** Data and schema files are fetched client-side from the `/public` directory. This simplifies deployment to static hosting platforms but requires the data to be downloaded by the client.
+*   **Parquet Parsing:** The `parquet-wasm` library is used for efficient client-side parsing of the Parquet file. This avoids the need for a dedicated backend data processing service.
+*   **Performance Optimization (Web Worker):** To prevent the UI from freezing during potentially long-running Parquet parsing and data aggregation tasks, these operations were offloaded from the main thread to a Web Worker. This maintains UI responsiveness, especially for larger datasets or complex aggregations (like daily).
+*   **State Management:** React Context (`NavigationContext`) was chosen for managing global application state (current page view, data availability flags, expert mode status, electricity aggregation level). This approach is suitable for the current scale of the application.
+*   **Visualization:** `Plotly.js` (via `react-plotly.js`) was selected for its versatility in creating the required chart types (bar, stacked bar, stacked area). Material UI (MUI) was used for UI components to speed up development and provide a consistent look and feel.
+*   **Testing Strategy:** Jest and React Testing Library form the testing foundation. Key decisions include:
+    *   Mocking data loading functions (`dataLoader.ts`) to isolate component logic testing from actual data fetching.
+    *   Mocking chart components (`GDPChart`, `ElectricityChart`) in tests for components that use them (like `Dashboard`) to avoid errors related to rendering dependencies (e.g., `canvas`) in the JSDOM environment.
+    *   This strategy focuses tests on component behavior and logic rather than full end-to-end rendering, allowing tests to run reliably without complex environment setup.
+*   **Expert Mode:** Implemented based on the interpretation that it should provide access to more granular data views, specifically enabling the 'Monthly' and 'Daily' aggregation options for the electricity chart.
+*   **Deployment:** A multi-stage Dockerfile with Nginx is used to create an optimized production build, served statically as required by the task.
