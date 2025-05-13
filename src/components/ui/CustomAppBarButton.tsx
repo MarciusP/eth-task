@@ -19,6 +19,7 @@ function CustomAppBarButton({
         selected ? " selected" : ""
       }`}
       onClick={onClick}
+      disabled={disabled}
     >
       {text}
     </button>

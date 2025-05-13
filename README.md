@@ -32,30 +32,37 @@ The application allows users to explore GDP trends over time and analyze electri
 ## Project Structure
 
 ```
-eth-task/               # Main application project directory
-├── docker-compose.yml  # Docker Compose configuration for the frontend service
-├── Dockerfile          # Dockerfile for building the React app & Nginx server
+eth-task/
+├── .dockerignore       # Files to ignore for Docker build
+├── docker-compose.yml  # Docker Compose configuration
+├── Dockerfile          # Dockerfile for building the app & Nginx server
+├── jest.config.ts      # Jest test runner configuration
+├── jest.setup.ts       # Jest setup file (e.g., for mocks)
 ├── nginx/              # Nginx configuration
 │   └── default.conf
+├── package.json        # Project dependencies and scripts
 ├── public/             # Static assets and data files
 │   ├── gdp.csv
 │   ├── gdp.json
 │   ├── generation.json
 │   ├── generation.parquet
-│   └── parquet_wasm_bg.wasm # Copied during setup or build
+│   └── parquet_wasm_bg.wasm
 ├── src/                # Application source code
-│   ├── components/     # React components (UI, Charts, Dashboard)
+│   ├── components/     # React components
+│   │   ├── charts/
+│   │   ├── ui/
+│   │   └── __tests__/  # Component tests
+│   │   └── Dashboard.tsx
 │   ├── context/        # React Context for global state
 │   ├── services/       # Data loading logic
 │   ├── types/          # TypeScript type definitions
 │   ├── workers/        # Web Worker code
 │   ├── App.tsx         # Main application component
-│   ├── main.tsx        # Application entry point
-│   └── index.scss      # Global styles
-├── .dockerignore       # Files to ignore for Docker build
-├── package.json        # Project dependencies and scripts
-├── tsconfig.json       # TypeScript configuration
-├── vite.config.ts      # Vite configuration
+│   ├── index.scss      # Global styles
+│   └── main.tsx        # Application entry point
+├── tsconfig.json       # Base TypeScript configuration
+├── tsconfig.app.json   # App-specific TypeScript configuration (used by Jest)
+├── vite.config.ts      # Vite build tool configuration
 └── README.md           # This file
 ```
 
@@ -131,5 +138,15 @@ The application expects the following data and schema files to be present in the
 *   `generation.parquet`: Electricity generation data.
 *   `generation.json`: Schema for electricity generation data.
 *   `parquet_wasm_bg.wasm`: WebAssembly binary for the parquet parser.
+
+## Testing
+
+This project uses [Jest](https://jestjs.io/) and [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) for unit and integration testing.
+
+To run the tests, navigate to the `eth-task` directory and run:
+
+```bash
+npm test
+```
 
 ---
